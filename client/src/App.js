@@ -67,6 +67,15 @@ function App() {
     setInput(`תן לי ${item.hebrew}`);
   };
 
+  const createGiveCommand = (item) => {
+    // Generate the /give command
+    const command = `/give @p ${item.english} 1`;
+    setResult({
+      command: command,
+      description: `פקודה ליצירת ${item.hebrew} (${item.description})`
+    });
+  };
+
   const insertItemIntoInput = (item) => {
     const newInput = input ? `${input} ${item.hebrew}` : item.hebrew;
     setInput(newInput);
@@ -116,115 +125,6 @@ function App() {
             {loading ? 'מעבד...' : 'צור פקודה'}
           </Button>
         </Box>
-
-        {/* Item Category Selector */}
-        <Paper elevation={1} sx={{ p: 3, mb: 3, bgcolor: 'grey.50' }}>
-          <Typography variant="h6" gutterBottom>
-            🎯 בחירת פריטים לפי קטגוריה
-          </Typography>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            בחר קטגוריה ופריט כדי להוסיף לפקודה או ליצור פקודת "תן לי" אוטומטית
-          </Typography>
-          
-          <Grid container spacing={2} sx={{ mt: 2 }}>
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>בחר קטגוריה</InputLabel>
-                <Select
-                  value={selectedCategory}
-                  label="בחר קטגוריה"
-                  onChange={(e) => handleCategoryChange(e.target.value)}
-                >
-                  {Object.entries(itemCategories).map(([key, category]) => (
-                    <MenuItem key={key} value={key}>
-                      {category.icon} {category.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth disabled={!selectedCategory}>
-                <InputLabel>בחר פריט</InputLabel>
-                <Select
-                  value={selectedItem}
-                  label="בחר פריט"
-                  onChange={(e) => handleItemSelect(e.target.value)}
-                >
-                  {selectedCategory && itemCategories[selectedCategory].items.map((item, index) => (
-                    <MenuItem key={index} value={item}>
-                      {item.hebrew} ({item.description})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-          
-          {selectedItem && (
-            <Box sx={{ mt: 2, p: 2, bgcolor: 'primary.50', borderRadius: 1 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                פריט נבחר: <strong>{selectedItem.hebrew}</strong>
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                {selectedItem.description} ({selectedItem.english})
-              </Typography>
-              <Box sx={{ mt: 1 }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => insertItemIntoInput(selectedItem)}
-                  sx={{ mr: 1 }}
-                >
-                  הוסף לפקודה
-                </Button>
-                <Button
-                  size="small"
-                  variant="contained"
-                  onClick={() => handleItemSelect(selectedItem)}
-                >
-                  צור פקודת "תן לي"
-                </Button>
-              </Box>
-            </Box>
-          )}
-        </Paper>
-
-        {/* Item Browser Accordion */}
-        <Paper elevation={1} sx={{ mb: 3 }}>
-          <Typography variant="h6" sx={{ p: 2, pb: 1 }}>
-            📋 עיון בכל הפריטים לפי קטגוריות
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ px: 2, pb: 2 }}>
-            לחץ על קטגוריה כדי לראות את כל הפריטים הזמינים
-          </Typography>
-          
-          {Object.entries(itemCategories).map(([categoryKey, category]) => (
-            <Accordion key={categoryKey}>
-              <AccordionSummary expandIcon={<ExpandMore />}>
-                <Typography variant="subtitle1">
-                  {category.icon} {category.name} ({category.items.length} פריטים)
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Box display="flex" flexWrap="wrap" gap={1}>
-                  {category.items.map((item, index) => (
-                    <Chip
-                      key={index}
-                      label={item.hebrew}
-                      variant="outlined"
-                      clickable
-                      onClick={() => handleItemSelect(item)}
-                      title={`${item.description} (${item.english})`}
-                      size="small"
-                    />
-                  ))}
-                </Box>
-              </AccordionDetails>
-            </Accordion>
-          ))}
-        </Paper>
 
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
@@ -299,6 +199,118 @@ function App() {
             </CardContent>
           </Card>
         )}
+
+        {/* Item Category Selector */}
+        <Paper elevation={1} sx={{ p: 3, mb: 3, bgcolor: 'grey.50' }}>
+          <Typography variant="h6" gutterBottom>
+            🎯 בחירת פריטים לפי קטגוריה
+          </Typography>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            בחר קטגוריה ופריט כדי להוסיף לפקודה או ליצור פקודה אוטומטית
+          </Typography>
+          
+          <Grid container spacing={2} sx={{ mt: 2 }}>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>בחר קטגוריה</InputLabel>
+                <Select
+                  value={selectedCategory}
+                  label="בחר קטגוריה"
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                >
+                  {Object.entries(itemCategories).map(([key, category]) => (
+                    <MenuItem key={key} value={key}>
+                      {category.icon} {category.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth disabled={!selectedCategory}>
+                <InputLabel>בחר פריט</InputLabel>
+                <Select
+                  value={selectedItem ? JSON.stringify(selectedItem) : ''}
+                  label="בחר פריט"
+                  onChange={(e) => {
+                    const item = JSON.parse(e.target.value);
+                    handleItemSelect(item);
+                  }}
+                >
+                  {selectedCategory && itemCategories[selectedCategory].items.map((item, index) => (
+                    <MenuItem key={index} value={JSON.stringify(item)}>
+                      {item.hebrew} ({item.description})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+          
+          {selectedItem && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'primary.50', borderRadius: 1 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                פריט נבחר: <strong>{selectedItem.hebrew}</strong>
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {selectedItem.description} ({selectedItem.english})
+              </Typography>
+              <Box sx={{ mt: 1 }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => insertItemIntoInput(selectedItem)}
+                  sx={{ mr: 1 }}
+                >
+                  הוסף לפקודה
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => createGiveCommand(selectedItem)}
+                >
+                  צור פקודת "תן לي"
+                </Button>
+              </Box>
+            </Box>
+          )}
+        </Paper>
+
+        {/* Item Browser Accordion */}
+        <Paper elevation={1} sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ p: 2, pb: 1 }}>
+            📋 עיון בכל הפריטים לפי קטגוריות
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ px: 2, pb: 2 }}>
+            לחץ על קטגוריה כדי לראות את כל הפריטים הזמינים
+          </Typography>
+          
+          {Object.entries(itemCategories).map(([categoryKey, category]) => (
+            <Accordion key={categoryKey}>
+              <AccordionSummary expandIcon={<ExpandMore />}>
+                <Typography variant="subtitle1">
+                  {category.icon} {category.name} ({category.items.length} פריטים)
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box display="flex" flexWrap="wrap" gap={1}>
+                  {category.items.map((item, index) => (
+                    <Chip
+                      key={index}
+                      label={item.hebrew}
+                      variant="outlined"
+                      clickable
+                      onClick={() => createGiveCommand(item)}
+                      title={`${item.description} (${item.english})`}
+                      size="small"
+                    />
+                  ))}
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+          ))}
+        </Paper>
 
         <Box mt={4}>
           <Typography variant="h6" gutterBottom>
