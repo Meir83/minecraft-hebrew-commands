@@ -6,19 +6,29 @@ This project consists of:
 - **Backend**: Node.js/Express API with SQLite database (`server/` directory)
 - **Database**: SQLite file-based database (automatically created)
 
-## Deployment Configuration
+## ✅ FIXED: Deployment Configuration
+
+### Root Cause of Previous Issues:
+1. **Module Resolution**: Render was trying to start server from root directory but dependencies were in server subdirectory
+2. **Build Context**: Build script wasn't properly handling monorepo structure on Render
+3. **Working Directory**: Start command needed to run from server directory context
 
 ### Files Modified for Render Deployment:
 1. **`server/server.js`** - Updated to serve React build files in production
-2. **`package.json`** - Updated build and start scripts for Render
-3. **`client/package.json`** - Removed development proxy setting
-4. **`render.yaml`** - Render service configuration
+2. **`package.json`** - FIXED build and start scripts for proper monorepo handling
+3. **`render.yaml`** - NEW: Proper Render service configuration for monorepos
+4. **`Procfile`** - FIXED: Start command runs from server directory
 5. **`.gitignore`** - Allow client build directory to be committed
 
+### Fixed Configuration Details:
+- **Build Command**: `cd client && npm ci && npm run build && cd ../server && npm ci`
+- **Start Command**: `cd server && npm start`
+- **Working Directory**: Explicitly change to server directory before starting
+
 ### Environment Variables Required on Render:
-- `NODE_ENV=production` (automatically set)
-- `PORT=10000` (Render default)
-- `CORS_ORIGIN=*` (allow all origins in production)
+- `NODE_ENV=production` (automatically set by render.yaml)
+- `CORS_ORIGIN=*` (configured in render.yaml)
+- `PORT` (automatically provided by Render)
 
 ## Step-by-Step Deployment Instructions
 
@@ -42,26 +52,29 @@ git push origin master
 
 ### 2. Deploy to Render
 
-#### Option A: Using Render Dashboard
+#### Option A: Using render.yaml (Recommended - FIXED)
+1. The included `render.yaml` file will automatically configure the service with fixed settings
+2. Simply connect the repository and Render will use the configuration file
+3. The service will be created with optimal monorepo handling automatically
+4. ✅ **Fixed Issues**: Proper build and start commands for monorepo structure
+
+#### Option B: Manual Dashboard Configuration
 1. Go to [Render Dashboard](https://dashboard.render.com/)
 2. Click "New +" → "Web Service"
 3. Connect your GitHub repository: `https://github.com/Meir83/minecraft-hebrew-commands`
-4. Configure the service:
+4. Configure the service with FIXED settings:
    - **Name**: `minecraft-hebrew-commands`
    - **Environment**: `Node`
    - **Region**: `Oregon (US West)`
    - **Branch**: `master`
-   - **Build Command**: `npm run build`
-   - **Start Command**: `npm start`
+   - **Build Command**: `cd client && npm ci && npm run build && cd ../server && npm ci`
+   - **Start Command**: `cd server && npm start`
 5. Add Environment Variables:
    - `NODE_ENV`: `production`
    - `CORS_ORIGIN`: `*`
 6. Click "Create Web Service"
 
-#### Option B: Using render.yaml (Recommended)
-1. The included `render.yaml` file will automatically configure the service
-2. Simply connect the repository and Render will use the configuration file
-3. The service will be created with optimal settings automatically
+#### ⚠️ IMPORTANT: Use the FIXED commands above, not the old ones!
 
 ### 3. Verify Deployment
 
@@ -118,18 +131,47 @@ To upgrade to PostgreSQL later:
 
 ## Troubleshooting
 
-### Common Issues:
-1. **Build Fails**: Check that all dependencies are in `package.json`
+### ✅ RESOLVED: "Cannot find module 'express'" Error
+**Root Cause**: Render was trying to start the server from the root directory, but Express was installed in the server subdirectory.
+
+**Fix Applied**:
+- Changed start command to `cd server && npm start`
+- Updated build command to properly install server dependencies
+- Added render.yaml with correct working directory handling
+
+### ✅ RESOLVED: "Cannot find module '/opt/render/project/src/server.js'" Error
+**Root Cause**: Incorrect path specification in start command.
+
+**Fix Applied**:
+- Updated start command to use relative path with proper working directory
+- Changed from `node server/server.js` to `cd server && npm start`
+
+### Common Issues (Updated):
+1. **Build Fails**: ✅ Fixed - Check that monorepo dependencies are properly installed in both client and server directories
 2. **API 404**: Verify API routes are correctly prefixed with `/api`
 3. **Database Issues**: Check server logs for SQLite initialization errors
+4. **Module Not Found**: ✅ Fixed - Ensure start command runs from correct directory context
 
 ### Debug Commands:
 ```bash
-# Test build locally
-npm run build
+# Test build locally (use the same commands as Render)
+cd client && npm ci && npm run build && cd ../server && npm ci
 
-# Test production server locally
-NODE_ENV=production npm start
+# Test production server locally (use the same start command as Render)
+cd server && NODE_ENV=production npm start
+
+# Alternative local test
+NODE_ENV=production npm run start
+```
+
+### Render-Specific Debugging:
+```bash
+# Check if your build produces the expected files
+ls -la client/build/
+ls -la server/node_modules/express/
+
+# Verify your server can find dependencies
+cd server && node -e "console.log(require('express'))"
 ```
 
 ## Security Notes

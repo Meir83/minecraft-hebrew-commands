@@ -7,13 +7,14 @@
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
     "server:dev": "cd server && npm run dev",
     "client:dev": "cd client && npm run dev",
-    "build": "npm install && cd client && npm install && npm run build && cd ../server && npm install",
+    "build": "cd client && npm install && npm run build && cd ../server && npm install",
     "client:build": "cd client && npm run build",
     "server:build": "cd server && npm run build",
-    "start": "node server/server.js",
+    "start": "cd server && npm start",
     "install:all": "npm install && cd client && npm install && cd ../server && npm install",
     "heroku-postbuild": "npm run build"
   },
+  "dependencies": {},
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
