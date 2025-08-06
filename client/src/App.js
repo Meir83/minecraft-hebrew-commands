@@ -103,7 +103,13 @@ function App() {
             label="הכנס פקודה בעברית (למשל: בנה קיר, תן לי חרב)"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="דוגמאות: בנה קיר, תן לי חרב, זמן זומבי, שנה ליום..."
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
+            placeholder="דוגמאות: בנה קיר, תן לי חרב, זמן זומבי, שנה ליום... (לחץ Enter ליצירת פקודה)"
             sx={{
               mb: 3,
               '& .MuiInputBase-input': {
@@ -270,7 +276,7 @@ function App() {
                   variant="contained"
                   onClick={() => createGiveCommand(selectedItem)}
                 >
-                  צור פקודת "תן לي"
+                  צור פקודה
                 </Button>
               </Box>
             </Box>
