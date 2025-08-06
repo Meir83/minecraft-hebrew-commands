@@ -7,3 +7,6 @@ dist/
 .env
 *.db
 *.log
+
+# Claude settings (contains local configuration)
+.claude/settings.local.json

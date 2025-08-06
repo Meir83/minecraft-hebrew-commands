@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "minecraft": {
+      "command": "node",
+      "args": ["C:/Users/asda/.cursor/minecraft/mcp-server/dist/index.js"],
+      "env": {}
+    }
+  }
+}
